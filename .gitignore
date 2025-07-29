@@ -1,0 +1,6 @@
+# Ignorer le dossier de données
+data/
+tests/
+__pycache__/
+env/
+venv/
