@@ -7,7 +7,7 @@ class MainMenuView:
             print("1. Gérer les joueurs")
             print("2. Gérer les tournois")
             print("3. Afficher les rapports")
-            print("4. Lancemnet du round")
+            print("4. Lancement du round")
             print("5. Quitter")
 
             choice = input("Votre choix : ").strip()
