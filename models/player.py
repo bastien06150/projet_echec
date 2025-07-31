@@ -1,6 +1,3 @@
-import json
-
-
 class Player:
 
     def __init__(self, last_name, first_name, birth_date, national_id, score=0.0):

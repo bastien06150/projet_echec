@@ -6,7 +6,6 @@ from models.player import Player
 from views.tournament_view import TournamentView
 from views.player_view import PlayerView
 import os
-import random
 
 
 class TournamentController:
@@ -98,14 +97,33 @@ class TournamentController:
         joueurs_tries = sorted(joueurs, key=lambda j: j.score, reverse=True)
         matchs = []
         i = 0
-        while i < len(joueurs_tries) - 1:
-            j1 = joueurs_tries[i]
-            j2 = joueurs_tries[i + 1]
-            key = tuple(sorted([j1.national_id, j2.national_id]))
-            if key not in match_history:
-                matchs.append(Match(j1.national_id, j2.national_id))
-                match_history.add(key)
-            i += 2
+        if len(match_history) == 0:
+            while i < len(joueurs_tries) - 1:
+                j1 = joueurs_tries[i]
+                j2 = joueurs_tries[i + 1]
+                key = tuple(sorted([j1.national_id, j2.national_id]))
+                if key not in match_history:
+                    matchs.append(Match(j1.national_id, j2.national_id))
+                    match_history.add(key)
+                i += 2
+        else:
+            players_with_match = []
+            while i < len(joueurs_tries) - 1:
+                j1 = joueurs_tries[i]
+                j2 = None
+                if j1.national_id not in players_with_match:
+                    for j in range(i + 1, len(joueurs_tries) - 1):
+                        j_potentiel = joueurs_tries[j]
+                        key = tuple(sorted([j1.national_id, j_potentiel.national_id]))
+                        if key not in match_history:
+                            j2 = j_potentiel
+                            break
+                    if not j2:
+                        """prendre le premier ou dernier qui n est pas dans  player with match"""
+                    matchs.append(Match(j1.national_id, j2.national_id))
+                    match_history.add(key)
+                    players_with_match.append(j1.national_id)
+                    players_with_match.append(j2.national_id)
         return matchs
 
     def jouer_round_suivant(self, tournament):
@@ -170,5 +188,5 @@ class TournamentController:
             gagnant = joueurs_tries[0]
 
             print(
-                f"\n Félicitations à {gagnant.first_name} {gagnant.last_name} ({gagnant.national_id} le grand gagnant ) !"
+                f"\n Félicitations à {gagnant.first_name} {gagnant.last_name}  le grand gagnant  !"
             )

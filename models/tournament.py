@@ -1,4 +1,3 @@
-import os
 import json
 from models.round import Round
 from models.player import Player
