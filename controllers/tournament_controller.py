@@ -120,6 +120,17 @@ class TournamentController:
                             break
                     if not j2:
                         """prendre le premier ou dernier qui n est pas dans  player with match"""
+                        for j in joueurs_tries:
+                            if (
+                                j.national_id != j1.national_id
+                                and j.national_id not in players_with_match
+                            ):
+                                j2 = j
+                                key = tuple(
+                                    sorted([j1.national_id, j_potentiel.national_id])
+                                )
+                                break
+
                     matchs.append(Match(j1.national_id, j2.national_id))
                     match_history.add(key)
                     players_with_match.append(j1.national_id)
