@@ -79,8 +79,8 @@ class TournamentController:
                 print("Choix invalide.")
 
         os.makedirs("data", exist_ok=True)
-        tournament.save_to_file("data/tournoi_auto.json")
-        print("Tournoi sauvegardé avec succès !")
+        filename = f"data/tournoi_{tournament.name.replace(' ', '_').lower()}.json"
+        tournament.save_to_file(filename)
 
         self.jouer_round_suivant(tournament)
 
@@ -93,53 +93,52 @@ class TournamentController:
         TournamentView.display_tournament_detail(tournament)
 
     def generer_paires(self, joueurs, match_history):
-
         joueurs_tries = sorted(joueurs, key=lambda j: j.score, reverse=True)
         matchs = []
+        players_with_match = set()
         i = 0
-        if len(match_history) == 0:
-            while i < len(joueurs_tries) - 1:
-                j1 = joueurs_tries[i]
-                j2 = joueurs_tries[i + 1]
-                key = tuple(sorted([j1.national_id, j2.national_id]))
-                if key not in match_history:
-                    matchs.append(Match(j1.national_id, j2.national_id))
-                    match_history.add(key)
-                i += 2
-        else:
-            players_with_match = []
-            while i < len(joueurs_tries) - 1:
-                j1 = joueurs_tries[i]
-                j2 = None
-                if j1.national_id not in players_with_match:
-                    for j in range(i + 1, len(joueurs_tries) - 1):
-                        j_potentiel = joueurs_tries[j]
-                        key = tuple(sorted([j1.national_id, j_potentiel.national_id]))
-                        if key not in match_history:
-                            j2 = j_potentiel
-                            break
-                    if not j2:
-                        """prendre le premier ou dernier qui n est pas dans  player with match"""
-                        for j in joueurs_tries:
-                            if (
-                                j.national_id != j1.national_id
-                                and j.national_id not in players_with_match
-                            ):
-                                j2 = j
-                                key = tuple(
-                                    sorted([j1.national_id, j_potentiel.national_id])
-                                )
-                                break
 
-                    matchs.append(Match(j1.national_id, j2.national_id))
-                    match_history.add(key)
-                    players_with_match.append(j1.national_id)
-                    players_with_match.append(j2.national_id)
+        while i < len(joueurs_tries) - 1:
+            j1 = joueurs_tries[i]
+            if j1.national_id in players_with_match:
+                i += 1
+                continue
+
+            j2 = None
+            for j in range(i + 1, len(joueurs_tries)):
+                j_potentiel = joueurs_tries[j]
+                key = tuple(sorted([j1.national_id, j_potentiel.national_id]))
+                if (
+                    j_potentiel.national_id not in players_with_match
+                    and key not in match_history
+                ):
+                    j2 = j_potentiel
+                    break
+
+            # Si aucun joueur inédit, on prend le premier dispo même si déjà affronté
+            if not j2:
+                for j in range(i + 1, len(joueurs_tries)):
+                    j_potentiel = joueurs_tries[j]
+                    if j_potentiel.national_id not in players_with_match:
+                        j2 = j_potentiel
+                        break
+
+            if j2:
+                key = tuple(sorted([j1.national_id, j2.national_id]))
+                matchs.append(Match(j1.national_id, j2.national_id))
+                match_history.add(key)
+                players_with_match.update([j1.national_id, j2.national_id])
+            i += 1
+
+        print(f" {len(matchs)} match(s) généré(s).")
         return matchs
 
     def jouer_round_suivant(self, tournament):
         if tournament.current_round_number >= tournament.number_of_round:
             print(" Tous les rounds ont déjà été joués.")
+            print(
+                f"⏳ Round actuel : {tournament.current_round_number}, Rounds prévus : {tournament.number_of_round}"
+            )
             return
 
         round_name = f"Round {tournament.current_round_number + 1}"
@@ -147,6 +146,10 @@ class TournamentController:
         nouveau_round.matches = self.generer_paires(
             tournament.players, tournament.match_history
         )
+
+        if not nouveau_round.matches:
+            print(" Aucun match généré — impossible de lancer un nouveau round.")
+            return
 
         print(f"\n {round_name} — Saisie des résultats :")
 
@@ -179,8 +182,8 @@ class TournamentController:
         nouveau_round.end_round()
         tournament.rounds.append(nouveau_round)
         tournament.current_round_number += 1
-
-        tournament.save_to_file("data/tournoi_auto.json")
+        filename = f"data/tournoi_{tournament.name.replace(' ', '_').lower()}.json"
+        tournament.save_to_file(filename)
 
         print(f"\n {round_name} terminé et sauvegardé.")
         print("\n Scores des joueurs :")
