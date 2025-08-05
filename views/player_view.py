@@ -1,11 +1,29 @@
+from datetime import datetime
+import re
+
+
 class PlayerView:
     @staticmethod
     def prompt_new_player():
         print("--- Nouveau joueur ---")
         last_name = input("Nom : ")
         first_name = input("Prénom : ")
-        birth_date = input("Date de naissance (DD-MM-YYYY) : ")
-        national_id = input("ID national (ex : FR12345) : ")
+
+        while True:
+            birth_date = input("Date de naissance (DD-MM-YYYY) : ").strip()
+            try:
+                datetime.strptime(birth_date, "%d-%m-%Y")
+                break
+            except ValueError:
+                print("Format invalide. Utilise le format DD-MM-YYYY (ex: 31-12-1990).")
+
+        while True:
+            national_id = input("ID national (ex : FR12345) : ").strip().upper()
+            if re.fullmatch(r"[A-Z]{2}\d{5}", national_id):
+                print("ID valide !")
+                break
+            else:
+                print("ID invalide. Réessayer ")
         return {
             "last_name": last_name,
             "first_name": first_name,

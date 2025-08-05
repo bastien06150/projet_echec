@@ -1,11 +1,37 @@
+from datetime import datetime
+
+
 class TournamentView:
     @staticmethod
     def prompt_new_tournament():
         print("\n--- Créer un nouveau tournoi ---")
-        name = input("Nom du tournoi : ")
-        location = input("Lieu : ")
-        start_date = input("Date de début (DD-MM-YYYY) : ")
-        end_date = input("Date de fin (DD-MM-YYYY) : ")
+        while True:
+            name = input("Nom du tournoi : ").strip()
+            if not name:
+                print("Le nom peut pas etre vide.")
+                continue
+
+            location = input("Lieu : ")
+            if not location:
+                print("le lieu ne peut pas etre vide")
+            break
+
+        while True:
+            start_date = input("Date de début (DD-MM-YYYY) : ").strip()
+            try:
+                datetime.strptime(start_date, "%d-%m-%Y")
+                break
+            except ValueError:
+                print("Format de date invalide. Attendu : .DD-MM-YYYY")
+
+        while True:
+            end_date = input("Date de fin (DD-MM-YYYY) : ").strip()
+            try:
+                datetime.strptime(end_date, "%d-%m-%Y")
+                break
+            except ValueError:
+                print("Format de date invalide. Attendu : .DD-MM-YYYY")
+
         description = input("Description : ")
         return {
             "name": name,
