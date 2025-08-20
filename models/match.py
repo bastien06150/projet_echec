@@ -1,15 +1,21 @@
 class Match:
     def __init__(self, player1_id, player2_id, score1=0.0, score2=0.0):
+        """Initialise un match entre deux joueurs avec leurs identifiants et scores"""
+
         self.player1_id = player1_id
         self.player2_id = player2_id
         self.score1 = score1
         self.score2 = score2
 
     def to_list(self):
+        """Convertit le match en liste pour la sauvegarde JSON"""
+
         return [[self.player1_id, self.score1], [self.player2_id, self.score2]]
 
     @classmethod
     def creation_match_from_list(cls, data):
+        """Crée un objet Match à partir d'une liste"""
+
         player1_data, player2_data = data
         return cls(
             player1_id=player1_data[0],

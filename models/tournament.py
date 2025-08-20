@@ -19,6 +19,8 @@ class Tournament:
         self.match_history = set()  # évite les rematchs
 
     def add_player(self, player: Player):
+        """Ajoute un joueur au tournoi"""
+
         if any(p.national_id == player.national_id for p in self.players):
             print(
                 f"Joueur déjà inscrit : {player.first_name} {player.last_name} {player.national_id}"

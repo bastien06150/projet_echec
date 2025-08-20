@@ -5,6 +5,8 @@ import re
 class PlayerView:
     @staticmethod
     def prompt_new_player():
+        """Demande les informations d'un nouveau joueur"""
+
         print("--- Nouveau joueur ---")
         last_name = input("Nom : ")
         first_name = input("Prénom : ")
@@ -33,6 +35,8 @@ class PlayerView:
 
     @staticmethod
     def display_players(players):
+        """Affiche la liste des joueurs"""
+
         print("--- Liste des joueurs ---")
         if not players:
             print("Aucun joueur enregistré.")

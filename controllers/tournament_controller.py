@@ -11,73 +11,63 @@ import os
 class TournamentController:
 
     def create_tournament(self):
-        data = TournamentView.prompt_new_tournament()
-        tournament = Tournament(**data)
+        """Crée un nouveau tournoi"""
 
+        tournament = self._init_tournament()
         player_controller = PlayerController()
 
-        print("\n--- Joueurs existants ---")
-        for player in player_controller.players:
-            print(f"- {player.first_name} {player.last_name} ({player.national_id})")
+        self._print_existing_players(player_controller)
+        self._add_existing_players_to_tournament(tournament, player_controller)
+        self._handle_player_addition_loop(tournament, player_controller)
 
+        self._save_tournament(tournament)
+        self.jouer_round_suivant(tournament)
+
+    def _init_tournament(self):
+        data = TournamentView.prompt_new_tournament()
+        return Tournament(**data)
+
+    def _print_existing_players(self, player_controller):
+        TournamentView.display_existing_players(player_controller.players)
+
+    def _add_existing_players_to_tournament(self, tournament, player_controller):
         for player in player_controller.players:
             tournament.add_player(player)
 
+    def _handle_player_addition_loop(self, tournament, player_controller):
+        """ajout des joueurs au tournoi jusqu’à ce qu’il y en ait au moins 4"""
+
         while True:
-            """print("\n1. Ajouter un joueur existant")"""
-            print("2. Ajouter un nouveau joueur")
-            print("3. Terminer l'ajout de joueurs")
-            choix = input("Votre choix : ").strip()
+            choix = TournamentView.prompt_player_addition_choice()
 
             if choix == "1":
-                national_id = input(
-                    "Entrez l'ID national du joueur à ajouter : "
-                ).strip()
-                existing = next(
-                    (
-                        p
-                        for p in player_controller.players
-                        if p.national_id == national_id
-                    ),
-                    None,
-                )
-                if not existing:
-                    print("Aucun joueur trouvé avec cet ID.")
-                elif any(p.national_id == national_id for p in tournament.players):
-                    print("Ce joueur est déjà dans le tournoi.")
-                else:
-                    tournament.add_player(existing)
-                    print(
-                        f"{existing.first_name} {existing.last_name} ajouté au tournoi."
-                    )
+                self._ajouter_nouveau_joueur(tournament, player_controller)
 
-            if choix == "2":
-                player_data = PlayerView.prompt_new_player()
-                new_player = Player(**player_data)
-
-                if any(
-                    p.national_id == new_player.national_id
-                    for p in player_controller.players
-                ):
-                    print("Ce joueur est déjà enregistré.")
-                else:
-                    player_controller.players.append(new_player)
-                    player_controller.save_players()
-                    tournament.add_player(new_player)
-                    print(
-                        f"Joueur {new_player.first_name} {new_player.last_name} ajouté."
-                    )
-
-            elif choix == "3":
+            elif choix == "2":
                 if len(tournament.players) < 4:
-                    print(
-                        f"Vous devez inscrire au moins 4 joueurs (actuellement : {len(tournament.players)})."
-                    )
+                    TournamentView.show_min_players_required(len(tournament.players))
                 else:
                     break
             else:
-                print("Choix invalide.")
+                TournamentView.show_invalid_choice()
 
+    def _ajouter_nouveau_joueur(self, tournament, player_controller):
+        player_data = PlayerView.prompt_new_player()
+        new_player = Player(**player_data)
+
+        if any(
+            p.national_id == new_player.national_id for p in player_controller.players
+        ):
+            TournamentView.show_message("Ce joueur est déjà enregistré.")
+        else:
+            player_controller.players.append(new_player)
+            player_controller.save_players()
+            tournament.add_player(new_player)
+            TournamentView.show_message(
+                f"Joueur {new_player.first_name} {new_player.last_name} ajouté."
+            )
+
+    def _save_tournament(self, tournament):
         os.makedirs("data", exist_ok=True)
         filename = f"data/tournoi_{tournament.name.replace(' ', '_').lower()}.json"
         tournament.save_to_file(filename)
@@ -85,14 +75,16 @@ class TournamentController:
         self.jouer_round_suivant(tournament)
 
     def load_tournament(self):
-        path = input("Chemin du fichier tournoi (ex: data/tournoi_auto.json) : ")
+        path = TournamentView.prompt_tournament_file_path()
         if not os.path.exists(path):
-            print(" Fichier introuvable.")
+            TournamentView.show_message("Fichier inexistant! ")
             return
         tournament = Tournament.load_from_file(path)
         TournamentView.display_tournament_detail(tournament)
 
     def generer_paires(self, joueurs, match_history):
+        """Génère des paires de joueurs pour un round, en évitant les rematchs si possible"""
+
         joueurs_tries = sorted(joueurs, key=lambda j: j.score, reverse=True)
         matchs = []
         players_with_match = set()
@@ -130,14 +122,15 @@ class TournamentController:
                 players_with_match.update([j1.national_id, j2.national_id])
             i += 1
 
-        print(f" {len(matchs)} match(s) généré(s).")
+        TournamentView.show_match_count(len(matchs))
         return matchs
 
     def jouer_round_suivant(self, tournament):
+        """Lance le round suivant du tournoi"""
+
         if tournament.current_round_number >= tournament.number_of_round:
-            print(" Tous les rounds ont déjà été joués.")
-            print(
-                f"⏳ Round actuel : {tournament.current_round_number}, Rounds prévus : {tournament.number_of_round}"
+            TournamentView.show_all_rounds_played(
+                tournament.current_round_number, tournament.number_of_round
             )
             return
 
@@ -148,31 +141,20 @@ class TournamentController:
         )
 
         if not nouveau_round.matches:
-            print(" Aucun match généré — impossible de lancer un nouveau round.")
+            TournamentView.show_no_matches()
             return
 
-        print(f"\n {round_name} — Saisie des résultats :")
+        TournamentView.show_round_header(round_name)
+
+        TournamentView.display_match_list(nouveau_round.matches, tournament)
 
         for match in nouveau_round.matches:
             joueur1 = tournament.get_player_by_id(match.player1_id)
             joueur2 = tournament.get_player_by_id(match.player2_id)
 
-            print(
-                f"\nMatch : {joueur1.first_name} {joueur1.last_name} vs {joueur2.first_name} {joueur2.last_name}"
-            )
-
             # Saisie et validation des scores
-            while True:
-                try:
-                    s1 = float(input(f"Score de {joueur1.last_name} : "))
-                    s2 = float(input(f"Score de {joueur2.last_name} : "))
-                    if (s1, s2) not in [(1.0, 0.0), (0.0, 1.0), (0.5, 0.5)]:
-                        raise ValueError(
-                            "Format non valide (accepte seulement 1-0, 0-1 ou 0.5-0.5)"
-                        )
-                    break
-                except ValueError as e:
-                    print(e)
+            TournamentView.display_match(joueur1, joueur2)
+            s1, s2 = TournamentView.prompt_match_result(joueur1, joueur2)
 
             match.score1 = s1
             match.score2 = s2
@@ -185,22 +167,12 @@ class TournamentController:
         filename = f"data/tournoi_{tournament.name.replace(' ', '_').lower()}.json"
         tournament.save_to_file(filename)
 
-        print(f"\n {round_name} terminé et sauvegardé.")
-        print("\n Scores des joueurs :")
-        for joueur in tournament.players:
-            print(
-                f"{joueur.first_name} {joueur.last_name} ({joueur.national_id}) : {joueur.score} points"
-            )
+        TournamentView.show_round_end(round_name)
+        TournamentView.display_scores(tournament.players)
 
         if tournament.current_round_number >= tournament.number_of_round:
-            print("\n Le tournoi est terminé !")
-
-            # Trie les joueurs par score décroissant
             joueurs_tries = sorted(
                 tournament.players, key=lambda j: j.score, reverse=True
             )
             gagnant = joueurs_tries[0]
-
-            print(
-                f"\n Félicitations à {gagnant.first_name} {gagnant.last_name}  le grand gagnant  !"
-            )
+            TournamentView.display_winner(gagnant)
