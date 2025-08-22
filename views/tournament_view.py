@@ -137,7 +137,7 @@ class TournamentView:
     @staticmethod
     def display_scores(players):
         print("\nScores des joueurs :")
-        for joueur in players:
+        for joueur in sorted(players, key=lambda j: j.score, reverse=True):
             print(
                 f"{joueur.first_name} {joueur.last_name} ({joueur.national_id}) : {joueur.score} points"
             )
