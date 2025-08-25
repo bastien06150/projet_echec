@@ -9,8 +9,9 @@ class MainMenuView:
             print("1. Gérer les joueurs")
             print("2. Gérer les tournois")
             print("3. Afficher les rapports")
-            print("4. Lancement du round")
-            print("5. Quitter")
+            print("4. Tournois existant")
+            print("5. Lancement du round")
+            print("6. Quitter")
 
             choice = input("Votre choix : ").strip()
             if choice in {"1", "2", "3", "4", "5"}:

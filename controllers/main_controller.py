@@ -3,6 +3,7 @@ from controllers.player_controller import PlayerController
 from controllers.tournament_controller import TournamentController
 from views.menu_view import MainMenuView
 from models.tournament import Tournament
+from views.tournament_view import TournamentView
 
 
 class MainController:
@@ -27,9 +28,12 @@ class MainController:
                 self.tournament_ctrl.load_tournament()
 
             elif choix == "4":
-                self._lancer_round()
+                self.tournament_ctrl.afficher_tous_les_tournois()
 
             elif choix == "5":
+                self._lancer_round()
+
+            elif choix == "6":
                 MainMenuView.show_exit_message()
                 break
 
@@ -46,12 +50,12 @@ class MainController:
                 MainMenuView.show_invalid_choice()
 
     def _lancer_round(self):
-        if self.current_tournament:
-            self.tournament_ctrl.jouer_round_suivant(self.current_tournament)
-        else:
-            path = MainMenuView.prompt_tournament_path()
-            if not os.path.exists(path):
-                MainMenuView.show_file_not_found()
-            else:
-                self.current_tournament = Tournament.load_from_file(path)
-                self.tournament_ctrl.jouer_round_suivant(self.current_tournament)
+        name = TournamentView.prompt_tournament_name()
+        filename = f"data/tournoi_{name.replace(' ', '_').lower()}.json"
+
+        if not os.path.exists(filename):
+            TournamentView.show_message("Fichier introuvable.")
+            return
+
+        self.current_tournament = Tournament.load_from_file(filename)
+        self.tournament_ctrl.jouer_round_suivant(self.current_tournament)

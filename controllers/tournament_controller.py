@@ -6,6 +6,7 @@ from models.player import Player
 from views.tournament_view import TournamentView
 from views.player_view import PlayerView
 import os
+import glob
 
 
 class TournamentController:
@@ -176,3 +177,13 @@ class TournamentController:
             )
             gagnant = joueurs_tries[0]
             TournamentView.display_winner(gagnant)
+
+    def afficher_tous_les_tournois(self):
+        fichiers = glob.glob("data/tournoi_*.json")
+
+        if not fichiers:
+            TournamentView.show_message("Aucun tournoi trouvé.")
+            return
+
+        tournois = [Tournament.load_from_file(f) for f in fichiers]
+        TournamentView.display_tournaments(tournois)

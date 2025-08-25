@@ -86,10 +86,9 @@ class TournamentView:
         print("2. Terminer l'ajout de joueurs")
         return input("Votre choix : ").strip()
 
-    def prompt_tournament_file_path():
-        return input(
-            "Chemin du fichier tournoi (ex: data/tournoi_auto.json) : "
-        ).strip()
+    @staticmethod
+    def prompt_tournament_name():
+        return input("Nom du tournoi à charger : ").strip()
 
     def show_message(message):
         print(message)
